@@ -32,7 +32,7 @@ class HomeScreen extends StatelessWidget {
                   // Hier kommt die Magie: Wir springen zum DoppelkopfSetupScreen!
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const DoppelkopfSetupScreen()),
+                    MaterialPageRoute(builder: (context) => const SetupScreen()),
                   );
                 },
                 child: const Padding(

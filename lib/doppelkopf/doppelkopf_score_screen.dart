@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:game_counter/database_helper.dart';
 import 'doppelkopf_game_model.dart';
 
 class ScoreScreen extends StatefulWidget {
@@ -79,7 +80,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                     backgroundColor: Colors.green.shade700,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     // 1. Eingegebene Punkte auslesen (Sicherheits-Check falls keine Zahl eingegeben wurde)
                     int baseScore = int.tryParse(scoreController.text) ?? 1;
                     
@@ -98,15 +99,21 @@ class _ScoreScreenState extends State<ScoreScreen> {
                       }
                     }
 
-                    // 3. Runde zum Spiel hinzufügen und das Haupt-UI aktualisieren
+                    final newRound = GameRound(
+                      gameId: widget.game.id!, // Die ID, die wir im Setup-Screen generiert haben!
+                      roundNumber: widget.game.rounds.length + 1,
+                      scores: roundScores,
+                    );
+
+                    // NEU: In der lokalen SQLite-Datenbank für immer speichern
+                    await DatabaseHelper.instance.createRound(newRound);
+
+                    // Das Haupt-UI aktualisieren
                     setState(() {
-                      widget.game.rounds.add(GameRound(
-                        roundNumber: widget.game.rounds.length + 1,
-                        scores: roundScores,
-                      ));
+                      widget.game.rounds.add(newRound);
                     });
 
-                    // 4. Dialog wieder schließen
+                    if (!mounted) return;
                     Navigator.pop(context);
                   },
                   child: const Text('Runde eintragen', style: TextStyle(fontSize: 16, color: Colors.white)),
