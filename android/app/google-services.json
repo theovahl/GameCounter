@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "32294025879",
+    "project_id": "game-counter-tv",
+    "storage_bucket": "game-counter-tv.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:32294025879:android:45a8b3955509604db887d2",
+        "android_client_info": {
+          "package_name": "com.example.game_counter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHAvQkm-3GsfzL9d1kJoTJXhvlz-6QWME"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
