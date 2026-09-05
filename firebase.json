@@ -1,1 +1,28 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"game-counter-tv","appId":"1:32294025879:android:45a8b3955509604db887d2","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"game-counter-tv","configurations":{"android":"1:32294025879:android:45a8b3955509604db887d2","ios":"1:32294025879:ios:aebafdb36cdd75e9b887d2","macos":"1:32294025879:ios:aebafdb36cdd75e9b887d2","web":"1:32294025879:web:c65a1613f6a8bd68b887d2","windows":"1:32294025879:web:4177ae2e87b83541b887d2"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "game-counter-tv",
+          "appId": "1:32294025879:android:45a8b3955509604db887d2",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "game-counter-tv",
+          "configurations": {
+            "android": "1:32294025879:android:45a8b3955509604db887d2",
+            "ios": "1:32294025879:ios:aebafdb36cdd75e9b887d2",
+            "macos": "1:32294025879:ios:aebafdb36cdd75e9b887d2",
+            "web": "1:32294025879:web:c65a1613f6a8bd68b887d2",
+            "windows": "1:32294025879:web:4177ae2e87b83541b887d2"
+          }
+        }
+      }
+    }
+  }
+}

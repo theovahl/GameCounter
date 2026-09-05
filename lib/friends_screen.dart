@@ -68,7 +68,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
               children: [
                 // Eigener User-Tag Banner
                 Card(
-                  color: Colors.green.shade900.withOpacity(0.4),
+                  color: Colors.green.shade900.withValues(alpha: 0.4),
                   child: ListTile(
                     leading: const Icon(Icons.badge, color: Colors.greenAccent),
                     title: const Text('Dein User-Tag'),

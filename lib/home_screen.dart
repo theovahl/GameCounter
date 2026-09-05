@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'doppelkopf/doppelkopf_setup_screen.dart';
+import 'mariokart/mariokart_setup_screen.dart';
 import 'auth_service.dart';
 import 'friends_screen.dart';
 
@@ -72,7 +73,6 @@ class HomeScreen extends StatelessWidget {
               color: Colors.green.shade900, // Passendes Grün für Kartenspiele
               child: InkWell(
                 onTap: () {
-                  // Hier kommt die Magie: Wir springen zum DoppelkopfSetupScreen!
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SetupScreen()),
@@ -96,21 +96,38 @@ class HomeScreen extends StatelessWidget {
             
             const SizedBox(height: 16),
             
-            // 2. Platzhalter für das nächste Spiel (z.B. Schafkopf oder Skat)
+            // 2. Kachel für Mario Kart 8 Deluxe
             Card(
-              elevation: 2,
-              color: Colors.grey.shade800,
-              child: const Padding(
-                padding: EdgeInsets.all(24.0),
-                child: Row(
-                  children: [
-                    Icon(Icons.add_circle_outline, size: 40, color: Colors.grey),
-                    SizedBox(width: 16),
-                    Text(
-                      'Skat (etc.)',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  ],
+              elevation: 4,
+              color: Colors.red.shade900,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MarioKartSetupScreen()),
+                  );
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.sports_motorsports, size: 40, color: Colors.white),
+                      SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Mario Kart',
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          Text(
+                            '8 Deluxe • Grand Prix Zähler',
+                            style: TextStyle(fontSize: 13, color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
