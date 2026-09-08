@@ -190,7 +190,7 @@ class _MarioKartGroupStatsScreenState extends State<MarioKartGroupStatsScreen> {
             icon: Icons.people,
             label: 'Fahrer',
             value: '${widget.group.playerNames.length}',
-            color: Colors.greenAccent,
+            color: Colors.white,
           ),
         ],
       ),
@@ -473,7 +473,7 @@ class _MarioKartGroupStatsScreenState extends State<MarioKartGroupStatsScreen> {
                       else
                         _buildStatChip(
                           '${player.winRatePercentage.toStringAsFixed(0)}% Siege',
-                          Colors.green.shade800,
+                          Colors.white,
                         ),
                     ],
                   ),
@@ -814,11 +814,11 @@ class _MarioKartGroupStatsScreenState extends State<MarioKartGroupStatsScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: isFinished
-                                  ? Colors.green.shade900.withValues(alpha: 0.4)
+                                  ? Colors.grey.shade800.withValues(alpha: 0.4)
                                   : Colors.amber.shade900.withValues(alpha: 0.4),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: isFinished ? Colors.greenAccent : Colors.amberAccent,
+                                color: isFinished ? Colors.white : Colors.amberAccent,
                               ),
                             ),
                             child: Text(
@@ -826,7 +826,7 @@ class _MarioKartGroupStatsScreenState extends State<MarioKartGroupStatsScreen> {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: isFinished ? Colors.greenAccent : Colors.amberAccent,
+                                color: isFinished ? Colors.white : Colors.amberAccent,
                               ),
                             ),
                           ),

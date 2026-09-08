@@ -68,9 +68,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
               children: [
                 // Eigener User-Tag Banner
                 Card(
-                  color: Colors.green.shade900.withValues(alpha: 0.4),
+                  color: Colors.grey.shade800.withValues(alpha: 0.4),
                   child: ListTile(
-                    leading: const Icon(Icons.badge, color: Colors.greenAccent),
+                    leading: const Icon(Icons.badge, color: Colors.white),
                     title: const Text('Dein User-Tag'),
                     subtitle: Text(
                       myUserTag,
@@ -170,7 +170,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.check, color: Colors.green),
+                                    icon: const Icon(Icons.check, color: Colors.white),
                                     onPressed: () => _authService.acceptFriendRequest(reqUser['uid']),
                                   ),
                                   IconButton(
@@ -219,7 +219,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           return Card(
                             child: ListTile(
                               leading: const CircleAvatar(
-                                backgroundColor: Colors.green,
+                                backgroundColor: Colors.white,
                                 child: Icon(Icons.person, color: Colors.white),
                               ),
                               title: Text(

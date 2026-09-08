@@ -592,7 +592,7 @@ class _MarioKartSetupScreenState extends State<MarioKartSetupScreen> {
                         value: 'finish',
                         child: Row(
                           children: [
-                            Icon(Icons.check_circle_outline, size: 18, color: Colors.greenAccent),
+                            Icon(Icons.check_circle_outline, size: 18, color: Colors.white),
                             SizedBox(width: 8),
                             Text('Beenden'),
                           ],
@@ -810,7 +810,7 @@ class _MarioKartSetupScreenState extends State<MarioKartSetupScreen> {
                 icon: const Icon(Icons.person_add),
                 label: const Text('Freunde suchen & hinzufügen'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
+                  backgroundColor: Colors.white,
                 ),
               ),
             ],
@@ -878,7 +878,7 @@ class _MarioKartSetupScreenState extends State<MarioKartSetupScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: const Text('Fahrer 1 • Host'),
-              trailing: const Icon(Icons.check, color: Colors.greenAccent),
+              trailing: const Icon(Icons.check, color: Colors.white),
             ),
           ),
           const SizedBox(height: 6),

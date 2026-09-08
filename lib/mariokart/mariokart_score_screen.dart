@@ -139,7 +139,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                                 '+$points Pkt.',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.greenAccent.shade200,
+                                  color: Colors.white70,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -431,12 +431,12 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
           ),
           if (game.status != 'finished')
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black),
               onPressed: () async {
                 Navigator.pop(context);
                 _confirmFinishGame(game);
               },
-              child: const Text('Match offiziell beenden', style: TextStyle(color: Colors.white)),
+              child: const Text('Match offiziell beenden', style: TextStyle(color: Colors.black)),
             ),
         ],
       ),
@@ -584,9 +584,9 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                   child: const Text('Abbrechen'),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black),
                   onPressed: () => Navigator.pop(dialogContext, true),
-                  child: const Text('Abschließen', style: TextStyle(color: Colors.white)),
+                  child: const Text('Abschließen', style: TextStyle(color: Colors.black)),
                 ),
               ],
             );
@@ -750,7 +750,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                   value: 'finish',
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle_outline, color: Colors.greenAccent, size: 20),
+                      Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
                       SizedBox(width: 10),
                       Text('Match beenden'),
                     ],
@@ -780,7 +780,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
             if (isFinished)
               Container(
                 width: double.infinity,
-                color: Colors.green.shade900.withValues(alpha: 0.5),
+                color: Colors.grey.shade800.withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -886,10 +886,10 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Card(
-                  color: Colors.green.shade900.withValues(alpha: 0.35),
+                  color: Colors.grey.shade800.withValues(alpha: 0.35),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: const BorderSide(color: Colors.greenAccent, width: 1.5),
+                    side: const BorderSide(color: Colors.white, width: 1.5),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -897,7 +897,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                       children: [
                         Text(
                           '🏆 ${currentGame.activeCup.cupName} abgeschlossen!',
-                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         const SizedBox(height: 6),
                         const Text(
@@ -991,7 +991,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                               children: [
                                 CircleAvatar(
                                   radius: 14,
-                                  backgroundColor: isCupDone ? Colors.green.shade800 : Colors.redAccent,
+                                  backgroundColor: isCupDone ? Colors.white : Colors.redAccent,
                                   child: Icon(
                                     isCupDone ? Icons.check : Icons.emoji_events,
                                     color: Colors.white,
@@ -1017,7 +1017,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                                 if (isCupDone)
                                   const Chip(
                                     label: Text('Abgeschlossen', style: TextStyle(fontSize: 11)),
-                                    backgroundColor: Colors.green,
+                                    backgroundColor: Colors.white,
                                     visualDensity: VisualDensity.compact,
                                   )
                                 else if (isCurrentActive)
@@ -1062,7 +1062,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                                         CircleAvatar(
                                           radius: 11,
                                           backgroundColor: isTrackDone
-                                              ? Colors.green.shade800
+                                              ? Colors.white
                                               : (isNextTrack ? Colors.redAccent : Colors.grey.shade700),
                                           child: Text(
                                             '${trackIdx + 1}',
@@ -1084,7 +1084,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                                           ),
                                         ),
                                         if (isTrackDone)
-                                          const Icon(Icons.check_circle, size: 16, color: Colors.greenAccent)
+                                          const Icon(Icons.check_circle, size: 16, color: Colors.white)
                                         else if (isNextTrack)
                                           const Chip(
                                             label: Text('Nächstes Rennen', style: TextStyle(fontSize: 10)),

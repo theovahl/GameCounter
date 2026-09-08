@@ -66,12 +66,12 @@ class _LoginScreenState extends State<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 20),
-            const Icon(Icons.style, size: 80, color: Colors.greenAccent),
+            const Icon(Icons.style, size: 80, color: Colors.white),
             const SizedBox(height: 20),
             Text(
               _isLogin ? 'Willkommen zurück!' : 'Spieleblock Cloud erstellen',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 30),
 
@@ -90,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Benutzername (z.B. Max)',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(Icons.person, color: Colors.white70),
                 ),
               ),
               const SizedBox(height: 16),
@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: const InputDecoration(
                 labelText: 'E-Mail Adresse',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
+                prefixIcon: Icon(Icons.email, color: Colors.white70),
               ),
             ),
             const SizedBox(height: 16),
@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: const InputDecoration(
                 labelText: 'Passwort',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
+                prefixIcon: Icon(Icons.lock, color: Colors.white70),
               ),
             ),
             const SizedBox(height: 24),
@@ -121,14 +121,15 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade700,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
+                  ? const CircularProgressIndicator(color: Colors.black)
                   : Text(
                       _isLogin ? 'Einloggen' : 'Registrieren',
-                      style: const TextStyle(fontSize: 18, color: Colors.white),
+                      style: const TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold),
                     ),
             ),
 

@@ -69,26 +69,30 @@ class HomeScreen extends StatelessWidget {
             
             // 1. Kachel für Doppelkopf
             Card(
-              elevation: 4,
-              color: Colors.green.shade900, // Passendes Grün für Kartenspiele
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SetupScreen()),
-                  );
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.style, size: 40, color: Colors.white), // Kartensymbol
-                      SizedBox(width: 16),
-                      Text(
-                        'Doppelkopf',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ],
+              clipBehavior: Clip.antiAlias,
+              child: Container(
+                decoration: const BoxDecoration(
+                  border: Border(left: BorderSide(color: Colors.amberAccent, width: 4)),
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SetupScreen()),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.style, size: 40, color: Colors.amberAccent), // Kartensymbol mit leichtem Akzent
+                        SizedBox(width: 16),
+                        Text(
+                          'Doppelkopf',
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -98,35 +102,39 @@ class HomeScreen extends StatelessWidget {
             
             // 2. Kachel für Mario Kart 8 Deluxe
             Card(
-              elevation: 4,
-              color: Colors.red.shade900,
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MarioKartSetupScreen()),
-                  );
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.sports_motorsports, size: 40, color: Colors.white),
-                      SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Mario Kart',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                          ),
-                          Text(
-                            '8 Deluxe • Grand Prix Zähler',
-                            style: TextStyle(fontSize: 13, color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                    ],
+              clipBehavior: Clip.antiAlias,
+              child: Container(
+                decoration: const BoxDecoration(
+                  border: Border(left: BorderSide(color: Colors.redAccent, width: 4)),
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MarioKartSetupScreen()),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.sports_motorsports, size: 40, color: Colors.redAccent),
+                        SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Mario Kart',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                            Text(
+                              '8 Deluxe • Grand Prix Zähler',
+                              style: TextStyle(fontSize: 13, color: Colors.white70),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

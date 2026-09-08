@@ -262,7 +262,7 @@ class _SetupScreenState extends State<SetupScreen> {
                               },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.green.shade700,
+                          backgroundColor: Colors.white,
                         ),
                         child: _isStarting
                             ? const SizedBox(
@@ -428,7 +428,7 @@ class _SetupScreenState extends State<SetupScreen> {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor:
-                      isActive ? Colors.green.shade800 : Colors.grey.shade800,
+                      isActive ? Colors.white : Colors.grey.shade800,
                   child: const Icon(Icons.style, color: Colors.white, size: 20),
                 ),
                 title: Text(
@@ -447,7 +447,7 @@ class _SetupScreenState extends State<SetupScreen> {
                       '${game.rounds.length} Runden gespielt  |  ${isActive ? "Laufend" : "Abgeschlossen"}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isActive ? Colors.greenAccent : Colors.grey,
+                        color: isActive ? Colors.white : Colors.grey,
                       ),
                     ),
                   ],
@@ -484,7 +484,7 @@ class _SetupScreenState extends State<SetupScreen> {
                         value: 'finish',
                         child: Row(
                           children: [
-                            Icon(Icons.check_circle_outline, size: 18, color: Colors.greenAccent),
+                            Icon(Icons.check_circle_outline, size: 18, color: Colors.white),
                             SizedBox(width: 8),
                             Text('Beenden'),
                           ],
@@ -616,7 +616,7 @@ class _SetupScreenState extends State<SetupScreen> {
                           children: [
                             CircleAvatar(
                               radius: 14,
-                              backgroundColor: Colors.green.shade800,
+                              backgroundColor: Colors.white,
                               child: Text(
                                 '${i + 1}',
                                 style: const TextStyle(
@@ -687,7 +687,7 @@ class _SetupScreenState extends State<SetupScreen> {
                 icon: const Icon(Icons.person_add),
                 label: const Text('Freunde suchen & hinzufügen'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
+                  backgroundColor: Colors.white,
                 ),
               ),
             ],
@@ -717,10 +717,10 @@ class _SetupScreenState extends State<SetupScreen> {
 
           // Spieler 1 (Festgelegt auf den aktuellen Benutzer)
           Card(
-            color: Colors.green.shade900.withValues(alpha: 0.35),
+            color: Colors.grey.shade800.withValues(alpha: 0.35),
             child: ListTile(
               leading: const CircleAvatar(
-                backgroundColor: Colors.green,
+                backgroundColor: Colors.white,
                 child: Icon(Icons.person, color: Colors.white),
               ),
               title: Text(

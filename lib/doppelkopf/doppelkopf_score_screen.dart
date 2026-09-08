@@ -51,7 +51,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                       return CheckboxListTile(
                         title: Text(currentGame.players[index]),
                         value: isWinner[index],
-                        activeColor: Colors.green,
+                        activeColor: Colors.white,
                         onChanged: (bool? value) {
                           setModalState(() {
                             isWinner[index] = value ?? false;
@@ -77,7 +77,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                   // Speichern-Button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
+                      backgroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () async {
@@ -228,7 +228,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                           return CheckboxListTile(
                             title: Text(currentGame.players[index]),
                             value: isWinner[index],
-                            activeColor: Colors.green,
+                            activeColor: Colors.white,
                             onChanged: (bool? value) {
                               setModalState(() {
                                 isWinner[index] = value ?? false;
@@ -271,7 +271,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                     // Speichern-Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
+                        backgroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () async {
@@ -527,7 +527,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                   value: 'finish',
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle_outline, color: Colors.greenAccent, size: 20),
+                      Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
                       SizedBox(width: 10),
                       Text('Spiel beenden'),
                     ],
@@ -595,7 +595,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                     style: TextStyle(
                       fontSize: 26,
                       color: score > 0
-                          ? Colors.greenAccent
+                          ? Colors.white
                           : (score < 0 ? Colors.redAccent : Colors.grey),
                       fontWeight: FontWeight.bold,
                     ),
@@ -629,7 +629,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                           backgroundColor: Colors.grey.shade800,
                           child: Text(
                             '${round.roundNumber}',
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.black),
                           ),
                         ),
                         title: Row(
@@ -641,7 +641,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
                               score > 0 ? '+$score' : '$score',
                               style: TextStyle(
                                 color: score > 0
-                                    ? Colors.green
+                                    ? Colors.white
                                     : (score < 0 ? Colors.red : Colors.grey),
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,
@@ -701,7 +701,7 @@ class _ScoreScreenState extends State<ScoreScreen> {
           ? null
           : FloatingActionButton(
               onPressed: () => _showAddRoundDialog(currentGame),
-              backgroundColor: Colors.green.shade700,
+              backgroundColor: Colors.white,
               child: const Icon(Icons.add, color: Colors.white),
             ),
     );
