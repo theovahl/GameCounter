@@ -1,11 +1,11 @@
 {
-    "name": "WG Olympiade – Live",
-    "short_name": "WG Olympiade",
+    "name": "GameCounter",
+    "short_name": "GameCounter",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#121212",
     "theme_color": "#121212",
-    "description": "A new Flutter project.",
+    "description": "Spielstände zählen und die WG Olympiade austragen.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

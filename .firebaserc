@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "game-counter-tv"
+  },
+  "targets": {
+    "game-counter-tv": {
+      "hosting": {
+        "live": ["game-counter-tv"],
+        "app": ["game-counter-tv-app"]
+      }
+    }
+  }
+}
