@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'olympiade_editions.dart';
-import 'olympiade_disciplines.dart';
+import '../olympiade_editions.dart';
+import 'olympiade_edition.dart';
 import 'olympiade_info_widgets.dart';
 import 'olympiade_setup_screen.dart';
 
@@ -109,10 +109,9 @@ class OlympiadeEditionsScreen extends StatelessWidget {
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
-                  children: edition.disciplines.map((d) {
-                    final info = olympiadeDiscipline(d);
+                  children: edition.disciplines.map((info) {
                     return Tooltip(
-                      message: edition.rulesFor(d)?.title ?? info.name,
+                      message: info.name,
                       child: CircleAvatar(
                         radius: 15,
                         backgroundColor: info.color.withValues(alpha: 0.18),

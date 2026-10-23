@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/olympiade/olympiade_disciplines.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/halbieren/halbieren_discipline.dart';
+import 'package:game_counter/olympiade/core/olympiade_discipline.dart';
+import 'package:game_counter/olympiade/core/olympiade_models.dart';
 import 'package:game_counter/olympiade/olympiade_editions.dart';
-import 'package:game_counter/olympiade/olympiade_models.dart';
 
 void main() {
   group('Olympiade editions', () {
@@ -11,43 +12,58 @@ void main() {
       expect(ids, contains(olympiadeDefaultEditionId));
     });
 
-    // Schützt neue Ausgaben vor Tippfehlern bei den Disziplin-Schlüsseln und Einstellungen
+    // Schützt neue Ausgaben vor Tippfehlern bei Disziplin-Schlüsseln und Uhrzeiten
     for (final edition in olympiadeEditions) {
-      test('${edition.label} only references known disciplines and settings', () {
+      test('${edition.label}: rules and schedule only reference its own disciplines', () {
+        final keys = edition.disciplineKeys;
+        expect(keys.toSet().length, keys.length, reason: 'Schlüssel doppelt');
         for (final d in edition.disciplines) {
-          expect(olympiadeAllDisciplines, contains(d));
+          expect(d, isNot(isA<UnknownOlympiadeDiscipline>()));
+          for (final s in d.settings) {
+            expect(s.presets.every((p) => p >= s.min && p <= s.max), isTrue, reason: '${d.key}.${s.key}');
+            expect(s.defaultValue, inInclusiveRange(s.min, s.max), reason: '${d.key}.${s.key}');
+          }
         }
         for (final section in edition.rules) {
-          expect(olympiadeAllDisciplines, contains(section.discipline));
+          expect(keys, contains(section.discipline));
           expect(section.items, isNotEmpty);
         }
         for (final day in edition.schedule) {
           for (final entry in day.entries) {
-            if (entry.discipline != null) expect(olympiadeAllDisciplines, contains(entry.discipline));
+            if (entry.discipline != null) expect(keys, contains(entry.discipline));
             expect(RegExp(r'^\d{2}:\d{2}$').hasMatch(entry.start), isTrue, reason: entry.title);
             expect(RegExp(r'^\d{2}:\d{2}$').hasMatch(entry.end), isTrue, reason: entry.title);
           }
         }
-        edition.settingDefaults.forEach((discipline, settings) {
-          final known = olympiadeDiscipline(discipline).settings.map((s) => s.key);
-          for (final key in settings.keys) {
-            expect(known, contains(key), reason: '$discipline.$key');
-          }
-        });
       });
     }
 
-    test('2026 edition has rules for all nine disciplines and a three-day schedule', () {
+    test('2026 edition: nine disciplines with the settings of the rulebook', () {
       final edition = olympiadeEditionById('2026-4');
       expect(edition.label, '4. Ausgabe 2026');
       expect(edition.rules.length, 9);
       expect(edition.schedule.map((d) => d.name), ['Freitag', 'Samstag', 'Sonntag']);
-      expect(edition.rulesFor('halbieren')?.title, 'Das Große Teilen');
-      expect(edition.settingDefault('darts', 'legsToWin'), 3);
-      expect(edition.settingDefault('codenames', 'winsNeeded'), 3);
+      expect(edition.disciplineKeys, [
+        'darts', 'halbieren', 'mariokart', 'geoguessr', 'rubiks', 'basketball', 'codenames', 'boule', 'bierpong',
+      ]);
+
+      int defaultOf(String discipline, String setting) =>
+          edition.discipline(discipline).settings.firstWhere((s) => s.key == setting).defaultValue;
+      expect(defaultOf('darts', 'legsToWin'), 3); // BO5
+      expect(defaultOf('codenames', 'winsNeeded'), 3); // BO5
+      expect(defaultOf('basketball', 'winsNeeded'), 2); // BO3
+      expect(defaultOf('rubiks', 'winsNeeded'), 1);
+      expect(defaultOf('boule', 'pointsPerSet'), 15);
+      expect(defaultOf('boule', 'setsToWin'), 2);
+
+      final teilen = edition.discipline('halbieren') as TeilenOlympiadeDiscipline;
+      expect(teilen.foods.length, 9);
+      expect(teilen.foods[3].actNote, 'Nur schwache Hand');
+      expect(edition.discipline('darts').roundRobinRounds, 1);
+      expect(edition.discipline('bierpong').roundRobinRounds, 2);
     });
 
-    test('olympiaden remember their edition, older ones fall back to the default', () {
+    test('olympiaden remember their edition, unknown or missing ids fall back to the default', () {
       final olympiade = OlympiadeGame(
         editionId: '2026-4',
         createdBy: 'u1',
@@ -70,6 +86,10 @@ void main() {
       // Kurzzeitig verwendete alte Kennung landet ebenfalls bei der 4. Ausgabe 2026
       final legacy = OlympiadeGame.fromMap({...olympiade.toMap(), 'editionId': '2026-2'}, id: 'o3');
       expect(legacy.edition.id, '2026-4');
+
+      // Ohne gespeicherte Disziplinen gelten die der Ausgabe
+      final noDisciplines = OlympiadeGame.fromMap(olympiade.toMap()..remove('disciplines'), id: 'o4');
+      expect(noDisciplines.disciplines, olympiadeEditionById('2026-4').disciplineKeys);
     });
   });
 }

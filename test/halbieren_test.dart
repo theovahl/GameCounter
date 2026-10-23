@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/halbieren/halbieren_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/halbieren/halbieren_models.dart';
 
 HalbierenGame _game({List<TeilenEntry> entries = const [], String status = 'active'}) {
   return HalbierenGame(

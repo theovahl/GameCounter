@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/boule/boule_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/boule/boule_models.dart';
 
 BouleGame _game({
   int teamCount = 2,

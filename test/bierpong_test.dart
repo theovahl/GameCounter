@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/bierpong/bierpong_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/bierpong/bierpong_models.dart';
 
 BierpongGame _game(String opponentUid, String opponentName, int winnerIndex) {
   return BierpongGame(

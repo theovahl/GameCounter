@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'doppelkopf/doppelkopf_setup_screen.dart';
 import 'mariokart/mariokart_setup_screen.dart';
-import 'olympiade/olympiade_editions_screen.dart';
+import 'olympiade/core/olympiade_editions_screen.dart';
 import 'auth_service.dart';
 import 'friends_screen.dart';
 

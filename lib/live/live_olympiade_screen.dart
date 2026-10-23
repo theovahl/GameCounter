@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:game_counter/darts/darts_models.dart';
-import 'package:game_counter/olympiade/olympiade_models.dart';
-import 'package:game_counter/olympiade/olympiade_service.dart';
-import 'package:game_counter/olympiade/olympiade_disciplines.dart';
-import 'package:game_counter/olympiade/olympiade_scoreboard.dart';
-import 'package:game_counter/olympiade/olympiade_info_widgets.dart';
+import 'package:game_counter/olympiade/core/olympiade_models.dart';
+import 'package:game_counter/olympiade/core/olympiade_service.dart';
+import 'package:game_counter/olympiade/core/olympiade_logic.dart';
+import 'package:game_counter/olympiade/core/olympiade_scoreboard.dart';
+import 'package:game_counter/olympiade/core/olympiade_info_widgets.dart';
 
 /// Zuschauer-Ansicht einer WG Olympiade. Liest die Olympiade und alle verknüpften
 /// Spiele live aus Firestore und rechnet den Stand selbst aus – auch während ein
@@ -321,7 +320,7 @@ class _LiveOlympiadeScreenState extends State<LiveOlympiadeScreen> {
           spacing: 8,
           runSpacing: 8,
           children: open.map((d) {
-            final info = olympiadeDiscipline(d);
+            final info = olympiade.edition.discipline(d);
             return Chip(
               avatar: Icon(info.icon, size: 18 * scale, color: info.color.withValues(alpha: 0.7)),
               label: Text(info.name, style: TextStyle(fontSize: 14 * scale)),
@@ -347,7 +346,7 @@ class _LiveOlympiadeScreenState extends State<LiveOlympiadeScreen> {
   }
 
   Widget _buildDisciplineTile(OlympiadeGame olympiade, String discipline, double scale) {
-    final info = olympiadeDiscipline(discipline);
+    final info = olympiade.edition.discipline(discipline);
     final result = olympiade.resultFor(discipline);
     final games = _gamesFor(discipline, result) ?? const [];
     final detail = olympiadeResultDetail(
@@ -359,11 +358,8 @@ class _LiveOlympiadeScreenState extends State<LiveOlympiadeScreen> {
     final winner = result.winnerWg;
 
     // Bei laufenden Duellen zeigen, wer gerade gegeneinander antritt
-    String? matchup;
     final lastGame = games.isNotEmpty ? games.last : null;
-    if (result.isRunning && lastGame is DartsGame && lastGame.status == 'active') {
-      matchup = '${lastGame.playerNames.join(' vs. ')} • Legs ${lastGame.legsWon.join(' : ')}';
-    }
+    final String? matchup = result.isRunning && lastGame != null ? info.liveMatchup(lastGame) : null;
 
     Widget trailing;
     if (result.isDone && winner == olympiadeDraw) {

@@ -1,12 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/bierpong/bierpong_models.dart';
-import 'package:game_counter/boule/boule_models.dart';
-import 'package:game_counter/codenames/codenames_models.dart';
-import 'package:game_counter/darts/darts_models.dart';
-import 'package:game_counter/mariokart/mariokart_data.dart';
-import 'package:game_counter/mariokart/mariokart_models.dart';
-import 'package:game_counter/olympiade/olympiade_disciplines.dart';
-import 'package:game_counter/olympiade/olympiade_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/bierpong/bierpong_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/boule/boule_discipline.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/boule/boule_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/codenames/codenames_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/darts/darts_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/mariokart/mariokart_data.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/mariokart/mariokart_discipline.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/mariokart/mariokart_models.dart';
+import 'package:game_counter/olympiade/core/olympiade_discipline.dart';
+import 'package:game_counter/olympiade/core/olympiade_logic.dart';
+import 'package:game_counter/olympiade/core/olympiade_models.dart';
 
 OlympiadeGame _olympiade({Map<String, OlympiadeResult>? results, List<String>? disciplines}) {
   return OlympiadeGame(
@@ -105,9 +108,11 @@ void main() {
     });
 
     test('dart and bierpong are multi-game disciplines', () {
-      expect(olympiadeDiscipline('darts').multiGame, isTrue);
-      expect(olympiadeDiscipline('bierpong').multiGame, isTrue);
-      expect(olympiadeDiscipline('codenames').multiGame, isFalse);
+      final edition = _olympiade().edition;
+      expect(edition.discipline('darts').multiGame, isTrue);
+      expect(edition.discipline('bierpong').multiGame, isTrue);
+      expect(edition.discipline('codenames').multiGame, isFalse);
+      expect(edition.discipline('gibt-es-nicht'), isA<UnknownOlympiadeDiscipline>());
     });
 
     test('formats points', () {
@@ -118,6 +123,21 @@ void main() {
 
   group('Olympiade discipline results', () {
     test('a decided game gives the win to that WG', () {
+      final codenames = CodenamesGame(
+        createdBy: 'u1',
+        date: DateTime(2026, 10, 22),
+        memberUids: ['u1', 'u3'],
+        teams: [
+          CodenamesTeam(name: 'Unsere WG', playerUids: ['u1'], playerNames: ['Theo']),
+          CodenamesTeam(name: 'Gegner-WG', playerUids: ['u3'], playerNames: ['Max']),
+        ],
+        winsNeeded: 2,
+        rounds: [CodenamesRound(winnerIndex: 1), CodenamesRound(winnerIndex: 1)],
+      );
+      expect(olympiadeWinnerFromGame(_olympiade(), 'codenames', codenames), 1);
+    });
+
+    test('dart is not decided per game but by the legs of all matches', () {
       final darts = DartsGame(
         createdBy: 'u1',
         date: DateTime(2026, 10, 22),
@@ -126,7 +146,9 @@ void main() {
         legsToWin: 2,
         legs: [DartsLeg(winnerIndex: 1), DartsLeg(winnerIndex: 1)],
       );
-      expect(olympiadeWinnerFromGame(darts, _olympiade()), 1);
+      final discipline = _olympiade().edition.discipline('darts');
+      expect(discipline.winnerFromGame(darts, _olympiade()), isNull);
+      expect(discipline.gameTally(darts), [0, 2]);
     });
 
     test('a running game has no result yet', () {
@@ -151,7 +173,7 @@ void main() {
         ends: [BouleEnd(teamIndex: 1, points: 5), BouleEnd(teamIndex: 0, points: 2)],
         status: 'finished',
       );
-      expect(olympiadeBouleWinner(boule), 1);
+      expect(const BouleOlympiadeDiscipline().winnerFromGame(boule, _olympiade()), 1);
     });
 
     test('mario kart compares average points per driver of each WG', () {
@@ -175,7 +197,7 @@ void main() {
         ],
         status: 'finished',
       );
-      expect(olympiadeMarioKartWinner(game, _olympiade()), 0);
+      expect(const MarioKartOlympiadeDiscipline().winnerFromGame(game, _olympiade()), 0);
     });
 
     test('mario kart with own track selection finishes after all chosen tracks', () {
@@ -198,8 +220,10 @@ void main() {
       expect(game.isCupFinished(0), isTrue);
     });
 
-    test('all mario kart tracks are selectable', () {
-      expect(olympiadeMarioKartTracks.length, 96);
+    test('all mario kart tracks are selectable, 48 of them from the main game', () {
+      final tracks = const MarioKartOlympiadeDiscipline().selectableTracks;
+      expect(tracks.length, 96);
+      expect(tracks.where((t) => t.main).length, 48);
     });
   });
 
@@ -223,6 +247,7 @@ void main() {
 
     test('sums legs of all dart games and drops deleted ones', () {
       final result = olympiadeMultiGameResultFrom(
+        discipline: _olympiade().edition.discipline('darts'),
         gameIds: ['d1', 'd2', 'd3'],
         games: [darts([0, 0, 0]), null, darts([1, 0])],
       );
@@ -233,6 +258,7 @@ void main() {
 
     test('counts bierpong wins per WG', () {
       final result = olympiadeMultiGameResultFrom(
+        discipline: _olympiade().edition.discipline('bierpong'),
         gameIds: ['b1', 'b2', 'b3'],
         games: [bierpong(1), bierpong(0), bierpong(1)],
       );
@@ -312,7 +338,7 @@ void main() {
 
     test('played games remove one occurrence of their pairing', () {
       final o = _olympiade();
-      final played = olympiadePlayedPairings([
+      final played = olympiadePlayedPairings(o, 'bierpong', [
         BierpongGame(
           createdBy: 'u1',
           date: DateTime(2026, 10, 23),

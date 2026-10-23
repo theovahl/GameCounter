@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/darts/darts_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/darts/darts_models.dart';
 
 DartsGame _game({int legsToWin = 3, List<int> legWinners = const []}) {
   return DartsGame(

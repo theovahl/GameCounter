@@ -2,34 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:game_counter/auth_service.dart';
 import 'package:game_counter/friends_screen.dart';
-import 'basketball_models.dart';
-import 'basketball_service.dart';
-import 'basketball_score_screen.dart';
+import 'olympiade_models.dart';
+import 'olympiade_service.dart';
+import 'olympiade_discipline.dart';
+import 'olympiade_logic.dart';
+import 'olympiade_edition.dart';
+import 'olympiade_screen.dart';
 
-const List<String> _teamNames = ['Team 1', 'Team 2'];
+/// Wettkampf-Bereich einer Ausgabe: deren Olympiaden und neue Olympiade anlegen.
+/// Wird als Reiter in [OlympiadeEditionScreen] angezeigt.
+class OlympiadeSetupScreen extends StatefulWidget {
+  final OlympiadeEdition edition;
 
-class BasketballSetupScreen extends StatefulWidget {
-  const BasketballSetupScreen({super.key});
+  const OlympiadeSetupScreen({super.key, required this.edition});
 
   @override
-  State<BasketballSetupScreen> createState() => _BasketballSetupScreenState();
+  State<OlympiadeSetupScreen> createState() => _OlympiadeSetupScreenState();
 }
 
-enum _SetupTab { games, newGame }
+enum _SetupTab { list, newOlympiade }
 
-class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
+class _OlympiadeSetupScreenState extends State<OlympiadeSetupScreen> {
   final AuthService _authService = AuthService();
-  final BasketballService _service = BasketballService();
+  final OlympiadeService _service = OlympiadeService();
 
-  _SetupTab _selectedTab = _SetupTab.newGame;
+  final List<TextEditingController> _nameControllers = [
+    TextEditingController(text: 'Unsere WG'),
+    TextEditingController(text: 'Gegner-WG'),
+  ];
 
-  // Spieler-UIDs pro Team (Index 0 = Team 1, 1 = Team 2)
-  final List<List<String>> _teamUids = [[], []];
+  _SetupTab _selectedTab = _SetupTab.list;
+
+  // Mitglieder-UIDs pro WG
+  final List<List<String>> _wgUids = [[], []];
   bool _initializedMe = false;
 
-  int _winsNeeded = 2;
+  late final Set<String> _disciplines = widget.edition.disciplineKeys.toSet();
+
+  // Disziplinen in der Reihenfolge der Ausgabe
+  List<String> get _disciplineOrder => widget.edition.disciplineKeys;
 
   bool _isStarting = false;
+
+  @override
+  void dispose() {
+    for (final c in _nameControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -37,40 +58,50 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
     );
   }
 
-  void _startGame({
+  void _startOlympiade({
     required String myUid,
     required Map<String, String> playerNames,
   }) async {
-    for (int t = 0; t < 2; t++) {
-      if (_teamUids[t].isEmpty) {
-        _showError('${_teamNames[t]} hat noch keine Spieler.');
+    final names = _nameControllers.map((c) => c.text.trim()).toList();
+    for (int i = 0; i < 2; i++) {
+      if (names[i].isEmpty) names[i] = 'WG ${i + 1}';
+      if (_wgUids[i].isEmpty) {
+        _showError('${names[i]} hat noch keine Mitglieder.');
         return;
       }
+    }
+    if (_disciplines.isEmpty) {
+      _showError('Wähle mindestens eine Disziplin aus.');
+      return;
     }
 
     setState(() => _isStarting = true);
 
     try {
-      final teams = List.generate(2, (t) {
-        return BasketballTeam(
-          name: _teamNames[t],
-          playerUids: List<String>.from(_teamUids[t]),
-          playerNames: _teamUids[t].map((uid) => playerNames[uid] ?? 'Mitspieler').toList(),
+      final wgs = List.generate(2, (i) {
+        return OlympiadeWg(
+          name: names[i],
+          playerUids: List<String>.from(_wgUids[i]),
+          playerNames: _wgUids[i].map((uid) => playerNames[uid] ?? 'Mitspieler').toList(),
         );
       });
 
-      final game = await _service.createGame(
+      final olympiade = await _service.createOlympiade(
+        editionId: widget.edition.id,
         createdBy: myUid,
-        teams: teams,
-        winsNeeded: _winsNeeded,
+        wgs: wgs,
+        disciplines: _disciplineOrder.where(_disciplines.contains).toList(),
       );
 
       if (!mounted) return;
-      setState(() => _isStarting = false);
+      setState(() {
+        _isStarting = false;
+        _selectedTab = _SetupTab.list;
+      });
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => BasketballScoreScreen(game: game)),
+        MaterialPageRoute(builder: (context) => OlympiadeScreen(olympiade: olympiade)),
       );
     } catch (e) {
       if (!mounted) return;
@@ -79,8 +110,8 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
     }
   }
 
-  void _showAddPlayerSheet(int teamIndex, Map<String, String> playerNames, String myUid) {
-    final color = basketballTeamColors[teamIndex];
+  void _showAddMemberSheet(int wgIndex, Map<String, String> playerNames, String myUid) {
+    final color = olympiadeWgColors[wgIndex];
 
     showModalBottomSheet(
       context: context,
@@ -89,8 +120,11 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             final available = playerNames.entries
-                .where((e) => !_teamUids[0].contains(e.key) && !_teamUids[1].contains(e.key))
+                .where((e) => !_wgUids[0].contains(e.key) && !_wgUids[1].contains(e.key))
                 .toList();
+            final wgName = _nameControllers[wgIndex].text.trim().isEmpty
+                ? 'WG ${wgIndex + 1}'
+                : _nameControllers[wgIndex].text.trim();
 
             return Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
@@ -99,7 +133,7 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Spieler zu ${_teamNames[teamIndex]} hinzufügen',
+                    'Mitglied zu $wgName hinzufügen',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
                     textAlign: TextAlign.center,
                   ),
@@ -108,7 +142,7 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 16.0),
                       child: Text(
-                        'Alle Spieler sind bereits einem Team zugeordnet.',
+                        'Alle Freunde sind bereits einer WG zugeordnet.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey),
                       ),
@@ -126,7 +160,7 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
                             title: Text(entry.key == myUid ? '${entry.value} (Du)' : entry.value),
                             trailing: Icon(Icons.add_circle_outline, color: color),
                             onTap: () {
-                              setState(() => _teamUids[teamIndex].add(entry.key));
+                              setState(() => _wgUids[wgIndex].add(entry.key));
                               setSheetState(() {});
                             },
                           );
@@ -158,7 +192,7 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
     }
 
     if (!_initializedMe) {
-      _teamUids[0].add(myUid);
+      _wgUids[0].add(myUid);
       _initializedMe = true;
     }
 
@@ -182,7 +216,7 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
             final bool isLoadingFriends =
                 friendsSnapshot.connectionState == ConnectionState.waiting;
 
-            // Alle verfügbaren Spieler: du + deine Freunde
+            // Alle verfügbaren Personen: du + deine Freunde
             final playerNames = <String, String>{
               myUid: myUsername,
               for (final f in friends)
@@ -190,10 +224,6 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
             };
 
             return Scaffold(
-              appBar: AppBar(
-                title: const Text('Basketball'),
-                centerTitle: true,
-              ),
               body: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -202,13 +232,13 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
                     SegmentedButton<_SetupTab>(
                       segments: const [
                         ButtonSegment(
-                          value: _SetupTab.games,
-                          label: Text('Spiele'),
-                          icon: Icon(Icons.history),
+                          value: _SetupTab.list,
+                          label: Text('Olympiaden'),
+                          icon: Icon(Icons.emoji_events_outlined),
                         ),
                         ButtonSegment(
-                          value: _SetupTab.newGame,
-                          label: Text('Neues Spiel'),
+                          value: _SetupTab.newOlympiade,
+                          label: Text('Neue Olympiade'),
                           icon: Icon(Icons.add),
                         ),
                       ],
@@ -221,43 +251,38 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
                     ),
                     const SizedBox(height: 16),
                     Expanded(
-                      child: _selectedTab == _SetupTab.games
-                          ? _buildGamesList(myUid)
+                      child: _selectedTab == _SetupTab.list
+                          ? _buildOlympiadenList(myUid)
                           : (isLoadingFriends
                               ? const Center(child: CircularProgressIndicator())
-                              : _buildNewGameForm(
+                              : _buildNewOlympiadeForm(
                                   myUid: myUid,
                                   playerNames: playerNames,
                                   hasFriends: friends.isNotEmpty,
                                 )),
                     ),
-                    if (_selectedTab == _SetupTab.newGame && !isLoadingFriends) ...[
+                    if (_selectedTab == _SetupTab.newOlympiade && !isLoadingFriends) ...[
                       const SizedBox(height: 12),
-                      ElevatedButton(
+                      ElevatedButton.icon(
                         onPressed: _isStarting
                             ? null
-                            : () => _startGame(myUid: myUid, playerNames: playerNames),
+                            : () => _startOlympiade(myUid: myUid, playerNames: playerNames),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.deepOrange.shade700,
+                          backgroundColor: Colors.amber.shade700,
+                          foregroundColor: Colors.black,
                         ),
-                        child: _isStarting
+                        icon: _isStarting
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                               )
-                            : const Text(
-                                'Spiel starten',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                            : const Icon(Icons.emoji_events),
+                        label: const Text(
+                          'Olympiade starten',
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ],
                   ],
@@ -270,16 +295,13 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
     );
   }
 
-  void _confirmDeleteGame(BasketballGame game) async {
-    final bool isFinished = game.status == 'finished';
+  void _confirmDelete(OlympiadeGame olympiade) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isFinished ? 'Spiel löschen?' : 'Spiel verwerfen?'),
-        content: Text(
-          isFinished
-              ? 'Möchtest du dieses Spiel aus der Historie entfernen?'
-              : 'Möchtest du dieses laufende Spiel wirklich abbrechen und verwerfen?',
+        title: const Text('Olympiade löschen?'),
+        content: const Text(
+          'Die Olympiade wird mit allen Ergebnissen und den darin gespielten Spielen gelöscht.',
         ),
         actions: [
           TextButton(
@@ -288,53 +310,48 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              isFinished ? 'Löschen' : 'Verwerfen',
-              style: const TextStyle(color: Colors.redAccent),
-            ),
+            child: const Text('Löschen', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
     );
 
-    if (confirm == true && game.id != null) {
-      await _service.deleteGame(game.id!);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isFinished ? 'Spiel gelöscht.' : 'Spiel verworfen.')),
-        );
-      }
+    if (confirm == true && olympiade.id != null) {
+      await _service.deleteOlympiade(olympiade);
     }
   }
 
-  // --- TAB 1: Eigene Spiele / Historie ---
-  Widget _buildGamesList(String myUid) {
-    return StreamBuilder<List<BasketballGame>>(
-      stream: _service.getUserGamesStream(myUid),
+  // --- TAB 1: Alle Olympiaden ---
+  Widget _buildOlympiadenList(String myUid) {
+    return StreamBuilder<List<OlympiadeGame>>(
+      stream: _service.getUserOlympiadenStream(myUid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final games = snapshot.data ?? [];
-        if (games.isEmpty) {
+        final list = (snapshot.data ?? [])
+            // Über die aufgelöste Ausgabe filtern: unbekannte Kennungen zählen zur Standard-Ausgabe
+            .where((o) => o.edition.id == widget.edition.id)
+            .toList();
+        if (list.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.sports_basketball, size: 64, color: Colors.grey),
+                const Icon(Icons.emoji_events_outlined, size: 64, color: Colors.grey),
                 const SizedBox(height: 12),
                 const Text(
-                  'Noch keine Basketball-Spiele.',
+                  'Noch keine Olympiade in dieser Ausgabe.',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: () {
-                    setState(() => _selectedTab = _SetupTab.newGame);
+                    setState(() => _selectedTab = _SetupTab.newOlympiade);
                   },
                   icon: const Icon(Icons.add),
-                  label: const Text('Jetzt erstes Spiel starten'),
+                  label: const Text('Jetzt die erste Olympiade starten'),
                 ),
               ],
             ),
@@ -342,54 +359,58 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
         }
 
         return ListView.builder(
-          itemCount: games.length,
+          itemCount: list.length,
           itemBuilder: (context, index) {
-            final game = games[index];
-            final bool isActive = game.status == 'active';
-            final int? winner = game.winnerIndex;
+            final olympiade = list[index];
+            final bool isActive = olympiade.status == 'active' && !olympiade.allDone;
+            final points = olympiade.points;
+            final leader = olympiadeLeader(points);
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 6.0),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: isActive ? Colors.deepOrange.shade700 : Colors.grey.shade800,
-                  child: const Icon(Icons.sports_basketball, color: Colors.white, size: 20),
+                  backgroundColor: isActive ? Colors.amber.shade700 : Colors.grey.shade800,
+                  child: Icon(Icons.emoji_events, color: isActive ? Colors.black : Colors.white, size: 20),
                 ),
                 title: Text(
-                  game.teams.map((t) => t.playerNames.join(' & ')).join('  vs.  '),
+                  olympiade.wgs.map((w) => w.name).join('  vs.  '),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Siege ${game.wins.join(' : ')}  •  Best of ${game.winsNeeded * 2 - 1}  •  '
-                      '${game.date.day}.${game.date.month}.${game.date.year}',
+                      '${points.map(formatOlympiadePoints).join(' : ')}  •  '
+                      '${olympiade.doneCount}/${olympiade.disciplines.length} Disziplinen  •  '
+                      '${olympiade.date.day}.${olympiade.date.month}.${olympiade.date.year}',
                       style: const TextStyle(fontSize: 13),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      winner != null
-                          ? '${game.teams[winner].name} hat gewonnen'
-                          : (isActive ? 'Laufend' : 'Abgebrochen'),
+                      isActive
+                          ? 'Läuft'
+                          : (leader == olympiadeDraw
+                              ? 'Unentschieden'
+                              : '${olympiade.wgs[leader].name} hat gewonnen'),
                       style: TextStyle(
                         fontSize: 12,
-                        color: winner != null
-                            ? basketballTeamColors[winner]
-                            : (isActive ? Colors.amberAccent : Colors.grey),
+                        color: isActive
+                            ? Colors.amberAccent
+                            : (leader == olympiadeDraw ? Colors.grey : olympiadeWgColors[leader]),
                       ),
                     ),
                   ],
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
-                  tooltip: isActive ? 'Verwerfen' : 'Löschen',
-                  onPressed: () => _confirmDeleteGame(game),
+                  tooltip: 'Löschen',
+                  onPressed: () => _confirmDelete(olympiade),
                 ),
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => BasketballScoreScreen(game: game)),
+                    MaterialPageRoute(builder: (context) => OlympiadeScreen(olympiade: olympiade)),
                   );
                 },
               ),
@@ -400,8 +421,8 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
     );
   }
 
-  // --- TAB 2: Neues Spiel ---
-  Widget _buildNewGameForm({
+  // --- TAB 2: Neue Olympiade ---
+  Widget _buildNewOlympiadeForm({
     required String myUid,
     required Map<String, String> playerNames,
     required bool hasFriends,
@@ -410,58 +431,12 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Modus: Siege zum Gesamtsieg (Best of)
-          const Text(
-            'Siege zum Gesamtsieg',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: [1, 2, 3, 4].map((n) {
-                    return ChoiceChip(
-                      label: Text('$n'),
-                      selected: _winsNeeded == n,
-                      onSelected: (_) => setState(() => _winsNeeded = n),
-                    );
-                  }).toList(),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline),
-                onPressed: _winsNeeded > 1 ? () => setState(() => _winsNeeded--) : null,
-              ),
-              SizedBox(
-                width: 28,
-                child: Text(
-                  '$_winsNeeded',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                onPressed: _winsNeeded < 21 ? () => setState(() => _winsNeeded++) : null,
-              ),
-            ],
-          ),
-          Text(
-            'Best of ${_winsNeeded * 2 - 1} • wer zuerst $_winsNeeded ${_winsNeeded == 1 ? "Partie" : "Partien"} gewinnt',
-            style: const TextStyle(fontSize: 13, color: Colors.grey),
-          ),
-          const SizedBox(height: 20),
-
-          // Teams
-          ...List.generate(2, (t) => _buildTeamEditor(t, playerNames, myUid)),
+          ...List.generate(2, (i) => _buildWgEditor(i, playerNames, myUid)),
 
           if (!hasFriends) ...[
             const SizedBox(height: 8),
             const Text(
-              'Du hast noch keine Freunde in deiner Liste. Füge Freunde hinzu, um sie in die Teams einzuteilen.',
+              'Du hast noch keine Freunde in deiner Liste. Die Mitglieder beider WGs müssen deine Freunde sein.',
               style: TextStyle(color: Colors.amberAccent, fontSize: 13),
             ),
           ],
@@ -478,14 +453,62 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
               label: const Text('Freunde hinzufügen'),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // Disziplinen
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Disziplinen',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Text(
+                '${_disciplines.length} ausgewählt',
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Jede Disziplin wird einmal gespielt. Die Reihenfolge wählt ihr während der Olympiade.',
+            style: TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: _disciplineOrder.map((key) {
+              final info = widget.edition.discipline(key);
+              final isSelected = _disciplines.contains(key);
+              return FilterChip(
+                avatar: Icon(info.icon, size: 18, color: isSelected ? info.color : Colors.grey),
+                label: Text(info.name),
+                selected: isSelected,
+                showCheckmark: false,
+                selectedColor: info.color.withValues(alpha: 0.2),
+                side: BorderSide(color: isSelected ? info.color : Colors.grey.shade700),
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _disciplines.add(key);
+                    } else {
+                      _disciplines.remove(key);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTeamEditor(int teamIndex, Map<String, String> playerNames, String myUid) {
-    final color = basketballTeamColors[teamIndex];
-    final uids = _teamUids[teamIndex].where(playerNames.containsKey).toList();
+  Widget _buildWgEditor(int wgIndex, Map<String, String> playerNames, String myUid) {
+    final color = olympiadeWgColors[wgIndex];
+    final uids = _wgUids[wgIndex].where(playerNames.containsKey).toList();
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -498,25 +521,22 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.circle, size: 14, color: color),
-                const SizedBox(width: 8),
-                Text(
-                  _teamNames[teamIndex],
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: color),
-                ),
-                const Spacer(),
-                Text(
-                  '${uids.length} Spieler',
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
-                ),
-              ],
+            TextField(
+              controller: _nameControllers[wgIndex],
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: color),
+              decoration: InputDecoration(
+                labelText: 'Name der WG',
+                prefixIcon: Icon(Icons.home, color: color),
+                border: const OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 10),
-            if (uids.isEmpty)
-              const Text('Noch keine Spieler', style: TextStyle(color: Colors.grey))
-            else
+            Text(
+              '${uids.length} ${uids.length == 1 ? "Mitglied" : "Mitglieder"}',
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            if (uids.isNotEmpty)
               Wrap(
                 spacing: 6,
                 runSpacing: 4,
@@ -525,15 +545,14 @@ class _BasketballSetupScreenState extends State<BasketballSetupScreen> {
                   return Chip(
                     label: Text(uid == myUid ? '$name (Du)' : name),
                     side: BorderSide(color: color.withValues(alpha: 0.6)),
-                    onDeleted: () => setState(() => _teamUids[teamIndex].remove(uid)),
+                    onDeleted: () => setState(() => _wgUids[wgIndex].remove(uid)),
                   );
                 }).toList(),
               ),
-            const SizedBox(height: 6),
             TextButton.icon(
-              onPressed: () => _showAddPlayerSheet(teamIndex, playerNames, myUid),
+              onPressed: () => _showAddMemberSheet(wgIndex, playerNames, myUid),
               icon: Icon(Icons.person_add_alt_1, color: color, size: 18),
-              label: Text('Spieler hinzufügen', style: TextStyle(color: color)),
+              label: Text('Mitglied hinzufügen', style: TextStyle(color: color)),
             ),
           ],
         ),

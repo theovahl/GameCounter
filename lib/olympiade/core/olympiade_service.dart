@@ -73,9 +73,10 @@ class OlympiadeService {
 
   /// Löscht eine Olympiade samt ihrer eigenen Spiele. Spiele älterer Olympiaden, die noch
   /// in den normalen Modi liegen, bleiben dort erhalten.
-  Future<void> deleteOlympiade(String olympiadeId) async {
-    final docRef = _olympiadenRef.doc(olympiadeId);
-    for (final discipline in olympiadeAllDisciplines) {
+  Future<void> deleteOlympiade(OlympiadeGame olympiade) async {
+    final docRef = _olympiadenRef.doc(olympiade.id);
+    final disciplines = {...olympiade.disciplines, ...olympiade.edition.disciplineKeys};
+    for (final discipline in disciplines) {
       final games = await docRef.collection('${discipline}_games').get();
       if (games.docs.isEmpty) continue;
       final batch = _firestore.batch();

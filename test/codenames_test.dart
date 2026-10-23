@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/codenames/codenames_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/codenames/codenames_models.dart';
 
 CodenamesGame _game({int winsNeeded = 3, List<int> roundWinners = const []}) {
   return CodenamesGame(

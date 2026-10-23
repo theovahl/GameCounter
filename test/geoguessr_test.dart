@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/geoguessr/geoguessr_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/geoguessr/geoguessr_models.dart';
 
 GeoguessrGame _game(List<List<int>> rounds) {
   return GeoguessrGame(

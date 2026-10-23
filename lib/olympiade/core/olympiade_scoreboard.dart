@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'olympiade_models.dart';
-import 'olympiade_disciplines.dart';
+import 'olympiade_discipline.dart';
+import 'olympiade_logic.dart';
 
 /// Medaillenspiegel der WG Olympiade: Punkte beider WGs, gewonnene Disziplinen,
 /// Fortschritt und Status. Wird in der App und auf der Zuschauer-Seite verwendet.
@@ -182,7 +183,7 @@ class OlympiadeScoreboard extends StatelessWidget {
           spacing: 4,
           runSpacing: 4,
           children: won.map((d) {
-            final info = olympiadeDiscipline(d);
+            final info = olympiade.edition.discipline(d);
             return Tooltip(
               message: info.name,
               child: CircleAvatar(

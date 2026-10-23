@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:game_counter/basketball/basketball_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/basketball/basketball_models.dart';
 
 BasketballGame _game({int winsNeeded = 2, List<int> roundWinners = const []}) {
   return BasketballGame(

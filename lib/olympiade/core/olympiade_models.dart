@@ -1,18 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'olympiade_editions.dart';
-
-// Alle Disziplinen der WG Olympiade (Schlüssel werden in Firestore gespeichert)
-const List<String> olympiadeAllDisciplines = [
-  'mariokart',
-  'boule',
-  'darts',
-  'codenames',
-  'halbieren',
-  'bierpong',
-  'basketball',
-  'geoguessr',
-  'rubiks',
-];
+import '../olympiade_editions.dart';
+import 'olympiade_edition.dart';
 
 // Ergebnis-Wert für ein Unentschieden
 const int olympiadeDraw = -1;
@@ -207,7 +195,9 @@ class OlympiadeGame {
       date: data['date'] is Timestamp ? (data['date'] as Timestamp).toDate() : DateTime.now(),
       memberUids: List<String>.from(data['memberUids'] ?? []),
       wgs: wgsRaw.map((w) => OlympiadeWg.fromMap(Map<String, dynamic>.from(w as Map))).toList(),
-      disciplines: List<String>.from(data['disciplines'] ?? olympiadeAllDisciplines),
+      disciplines: List<String>.from(
+        data['disciplines'] ?? olympiadeEditionById(data['editionId'] as String?).disciplineKeys,
+      ),
       results: resultsRaw.map(
         (k, v) => MapEntry(k, OlympiadeResult.fromMap(Map<String, dynamic>.from(v as Map))),
       ),

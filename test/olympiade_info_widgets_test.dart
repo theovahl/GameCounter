@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:game_counter/app_theme.dart';
 import 'package:game_counter/olympiade/olympiade_editions.dart';
-import 'package:game_counter/olympiade/olympiade_editions_screen.dart';
-import 'package:game_counter/olympiade/olympiade_info_widgets.dart';
-import 'package:game_counter/olympiade/olympiade_models.dart';
+import 'package:game_counter/olympiade/core/olympiade_editions_screen.dart';
+import 'package:game_counter/olympiade/core/olympiade_info_widgets.dart';
+import 'package:game_counter/olympiade/core/olympiade_models.dart';
 
 Future<void> _pumpAt(WidgetTester tester, Size size, Widget child) async {
   tester.view.physicalSize = size;
@@ -49,7 +49,7 @@ void main() {
         OlympiadeWg(name: 'A', playerUids: ['u1'], playerNames: ['Theo']),
         OlympiadeWg(name: 'B', playerUids: ['u2'], playerNames: ['Max']),
       ],
-      disciplines: edition.disciplines,
+      disciplines: edition.disciplineKeys,
       results: {'boule': const OlympiadeResult(winnerWg: 0)},
     );
     await _pumpAt(

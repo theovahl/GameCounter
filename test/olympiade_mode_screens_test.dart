@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:game_counter/app_theme.dart';
-import 'package:game_counter/geoguessr/geoguessr_models.dart';
-import 'package:game_counter/geoguessr/geoguessr_score_screen.dart';
-import 'package:game_counter/halbieren/halbieren_models.dart';
-import 'package:game_counter/halbieren/halbieren_score_screen.dart';
-import 'package:game_counter/olympiade/olympiade_disciplines.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/geoguessr/geoguessr_discipline.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/geoguessr/geoguessr_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/geoguessr/geoguessr_score_screen.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/halbieren/halbieren_discipline.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/halbieren/halbieren_models.dart';
+import 'package:game_counter/olympiade/ausgabe_2026/halbieren/halbieren_score_screen.dart';
 import 'package:game_counter/olympiade/olympiade_editions.dart';
 
 // Spiele ohne id werden ohne Firestore angezeigt, so lässt sich das Layout prüfen
@@ -20,7 +21,7 @@ void main() {
   final edition = olympiadeEditionById(olympiadeDefaultEditionId);
 
   testWidgets('Das Große Teilen shows the current food, timer and act note', (tester) async {
-    final foods = olympiadeTeilenFoods(edition);
+    final foods = (edition.discipline('halbieren') as TeilenOlympiadeDiscipline).foods;
     final game = HalbierenGame(
       createdBy: 'u1',
       date: DateTime(2026, 10, 23),
@@ -57,7 +58,10 @@ void main() {
         GeoguessrTeam(name: 'Unsere WG', playerUids: ['u1'], playerNames: ['Theo']),
         GeoguessrTeam(name: 'Gegner-WG', playerUids: ['u2'], playerNames: ['Max']),
       ],
-      stages: olympiadeGeoguessrStages(edition),
+      stages: (edition.discipline('geoguessr') as GeoguessrOlympiadeDiscipline)
+          .stages
+          .map((s) => GeoguessrStage(title: s.title, details: s.details, winsNeeded: s.winsNeeded))
+          .toList(),
       rounds: [
         GeoguessrRound(stageIndex: 0, winnerIndex: 0),
         GeoguessrRound(stageIndex: 0, winnerIndex: 0),

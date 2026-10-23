@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:game_counter/auth_service.dart';
-import 'package:game_counter/mariokart/mariokart_data.dart';
 import 'olympiade_models.dart';
 import 'olympiade_service.dart';
-import 'olympiade_disciplines.dart';
+import 'olympiade_discipline.dart';
+import 'olympiade_logic.dart';
 import 'olympiade_scoreboard.dart';
 import 'olympiade_info_widgets.dart';
 
@@ -63,7 +63,7 @@ class _OlympiadeScreenState extends State<OlympiadeScreen> {
         if (current.gameId == null) continue;
 
         OlympiadeResult updated;
-        if (olympiadeDiscipline(discipline).multiGame) {
+        if (olympiade.edition.discipline(discipline).multiGame) {
           // Dart/Bierpong: Legs bzw. Siege aller Spiele summieren, entschieden wird erst per "Beenden"
           if (current.isDone) continue;
           updated = await olympiadeMultiGameResult(discipline, current, olympiade);
@@ -74,7 +74,7 @@ class _OlympiadeScreenState extends State<OlympiadeScreen> {
               ? const OlympiadeResult()
               : OlympiadeResult(
                   gameIds: current.gameIds,
-                  winnerWg: olympiadeWinnerFromGame(game, olympiade),
+                  winnerWg: olympiadeWinnerFromGame(olympiade, discipline, game),
                 );
         }
 
@@ -93,7 +93,7 @@ class _OlympiadeScreenState extends State<OlympiadeScreen> {
     final game = await loadOlympiadeDisciplineGame(discipline, gameId, _latest);
     if (!mounted) return;
 
-    final screen = game != null ? olympiadeScoreScreenFor(game, _latest) : null;
+    final screen = game != null ? olympiadeScoreScreenFor(_latest, discipline, game) : null;
     if (screen == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Das Spiel wurde nicht gefunden und wird zurückgesetzt.')),
@@ -191,14 +191,14 @@ class _OlympiadeScreenState extends State<OlympiadeScreen> {
       builder: (sheetContext) => SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(12, 16, 12, 24),
-          child: OlympiadeRuleCard(section: rules),
+          child: OlympiadeRuleCard(edition: olympiade.edition, section: rules),
         ),
       ),
     );
   }
 
   void _showManualResultDialog(OlympiadeGame olympiade, String discipline) async {
-    final info = olympiadeDiscipline(discipline);
+    final info = olympiade.edition.discipline(discipline);
     final result = await showDialog<int>(
       context: context,
       builder: (context) => SimpleDialog(
@@ -248,7 +248,7 @@ class _OlympiadeScreenState extends State<OlympiadeScreen> {
 
   /// Beendet eine Mehrfach-Disziplin (Dart/Bierpong): Sieger ist die WG mit mehr Legs bzw. Siegen.
   void _confirmFinishMultiGame(OlympiadeGame olympiade, String discipline) async {
-    final info = olympiadeDiscipline(discipline);
+    final info = olympiade.edition.discipline(discipline);
     // Vor dem Beenden den aktuellen Stand aus allen Spielen holen
     final current = await olympiadeMultiGameResult(discipline, olympiade.resultFor(discipline), olympiade);
     if (!mounted) return;
@@ -309,7 +309,7 @@ class _OlympiadeScreenState extends State<OlympiadeScreen> {
   }
 
   void _confirmResetDiscipline(OlympiadeGame olympiade, String discipline) async {
-    final info = olympiadeDiscipline(discipline);
+    final info = olympiade.edition.discipline(discipline);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -388,7 +388,7 @@ class _OlympiadeScreenState extends State<OlympiadeScreen> {
     );
 
     if (confirm == true && olympiade.id != null) {
-      await _service.deleteOlympiade(olympiade.id!);
+      await _service.deleteOlympiade(olympiade);
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -534,7 +534,7 @@ class _OlympiadeScreenState extends State<OlympiadeScreen> {
   }
 
   Widget _buildDisciplineCard(OlympiadeGame olympiade, String discipline, bool isFinished) {
-    final info = olympiadeDiscipline(discipline);
+    final info = olympiade.edition.discipline(discipline);
     final result = olympiade.resultFor(discipline);
     final winner = result.winnerWg;
 
@@ -782,7 +782,7 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
     ));
     final open = olympiadeOpenPairings(
       olympiadeRoundRobinPairings(widget.olympiade, widget.discipline),
-      olympiadePlayedPairings(games),
+      olympiadePlayedPairings(widget.olympiade, widget.discipline, games),
     );
     if (!mounted) return;
     setState(() {
@@ -803,7 +803,7 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
     return i >= 0 ? wg.playerNames[i] : '?';
   }
 
-  late final OlympiadeDiscipline _info = olympiadeDiscipline(widget.discipline);
+  late final OlympiadeDiscipline _info = widget.olympiade.edition.discipline(widget.discipline);
   late final bool _isDuel = _info.kind == OlympiadeDisciplineKind.duel;
 
   // Ausgewählte Teilnehmer pro WG (bei Duellen genau einer)
@@ -814,10 +814,10 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
 
   late final Map<String, int> _settings = {
     for (final s in _info.settings)
-      s.key: widget.olympiade.edition.settingDefault(widget.discipline, s.key) ?? s.defaultValue,
+      s.key: s.defaultValue,
   };
 
-  // Mario Kart: ausgewählte Strecken (Indizes in olympiadeMarioKartTracks, in Fahrreihenfolge)
+  // Mario Kart: ausgewählte Strecken (Indizes in _info.selectableTracks, in Fahrreihenfolge)
   final List<int> _trackIndices = [];
   bool _isBusy = false;
 
@@ -853,7 +853,7 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
         return 'Wähle mindestens einen Teilnehmer für ${widget.olympiade.wgs[i].name}.';
       }
     }
-    if (widget.discipline == 'mariokart' && _trackIndices.isEmpty) {
+    if (_info.selectableTracks.isNotEmpty && _trackIndices.isEmpty) {
       return 'Wähle mindestens eine Strecke aus.';
     }
     return null;
@@ -881,9 +881,8 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
         uids: _selectedUids,
         names: _selectedNames,
         settings: _settings,
-        tracks: _trackIndices.map((i) => olympiadeMarioKartTracks[i].track).toList(),
+        tracks: _trackIndices.map((i) => _info.selectableTracks[i].name).toList(),
       );
-      if (gameId == null) throw Exception('Unbekannte Disziplin');
 
       await _service.setResult(
         olympiade: widget.olympiade,
@@ -909,7 +908,8 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
 
     setState(() => _isBusy = true);
     try {
-      final gameId = await saveOlympiadeBierpongResult(
+      final gameId = await saveOlympiadeInstantResult(
+        key: widget.discipline,
         olympiade: widget.olympiade,
         createdBy: widget.createdBy,
         uids: _selectedUids,
@@ -966,7 +966,7 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
             ],
             if (widget.olympiade.edition.rulesFor(widget.discipline) case final rules?) ...[
               const SizedBox(height: 12),
-              OlympiadeRuleCard(section: rules, showTitle: false),
+              OlympiadeRuleCard(edition: widget.olympiade.edition, section: rules, showTitle: false),
             ],
             const SizedBox(height: 20),
 
@@ -984,7 +984,7 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
             ...List.generate(2, (i) => _buildParticipantPicker(i)),
 
             // Modus-Einstellungen
-            if (widget.discipline == 'mariokart') ...[
+            if (_info.selectableTracks.isNotEmpty) ...[
               const SizedBox(height: 12),
               _buildTrackSelection(),
             ],
@@ -1164,7 +1164,7 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
   // --- Mario Kart: einzelne Strecken auswählen ---
 
   Widget _buildTrackSelection() {
-    final tracks = olympiadeMarioKartTracks;
+    final tracks = _info.selectableTracks;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1191,21 +1191,18 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
             ),
             TextButton.icon(
               onPressed: () {
-                // Alle Strecken der 12 Hauptspiel-Cups in Cup-Reihenfolge
+                // Alle Strecken des Hauptspiels in Cup-Reihenfolge
                 setState(() {
                   _trackIndices
                     ..clear()
                     ..addAll([
                       for (int i = 0; i < tracks.length; i++)
-                        if (MarioKartData.allCups.any(
-                          (c) => c.category == 'Hauptspiel' && c.name == tracks[i].cup,
-                        ))
-                          i,
+                        if (tracks[i].main) i,
                     ]);
                 });
               },
               icon: const Icon(Icons.select_all, size: 18),
-              label: const Text('Alle 48'),
+              label: Text('Alle ${tracks.where((t) => t.main).length}'),
             ),
           ],
         ),
@@ -1228,7 +1225,7 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
                   backgroundColor: Colors.redAccent,
                   child: Text('${n + 1}', style: const TextStyle(fontSize: 11, color: Colors.white)),
                 ),
-                label: Text(track.track),
+                label: Text(track.name),
                 onDeleted: () => setState(() => _trackIndices.removeAt(n)),
               );
             }),
@@ -1244,7 +1241,7 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
   }
 
   void _showTrackPicker() {
-    final tracks = olympiadeMarioKartTracks;
+    final tracks = _info.selectableTracks;
 
     showModalBottomSheet(
       context: context,
@@ -1293,27 +1290,31 @@ class _StartDisciplineSheetState extends State<_StartDisciplineSheet> {
                       child: ListView(
                         controller: scrollController,
                         padding: const EdgeInsets.all(16),
-                        children: MarioKartData.allCups.map((cup) {
+                        // Strecken nach Cup gruppiert
+                        children: {for (final t in tracks) t.group}.map((group) {
+                          final indices = [
+                            for (int i = 0; i < tracks.length; i++)
+                              if (tracks[i].group == group) i,
+                          ];
+                          final main = tracks[indices.first].main;
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 14.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  cup.name,
-                                  style: const TextStyle(
+                                  group,
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.redAccent,
+                                    color: main ? Colors.redAccent : Colors.amberAccent,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Wrap(
                                   spacing: 6,
                                   runSpacing: 4,
-                                  children: cup.tracks.map((trackName) {
-                                    final index = tracks.indexWhere(
-                                      (t) => t.cup == cup.name && t.track == trackName,
-                                    );
+                                  children: indices.map((index) {
+                                    final trackName = tracks[index].name;
                                     final position = _trackIndices.indexOf(index);
                                     return FilterChip(
                                       label: Text(

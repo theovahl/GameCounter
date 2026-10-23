@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'olympiade_models.dart';
-import 'olympiade_disciplines.dart';
-import 'olympiade_editions.dart';
+import 'olympiade_logic.dart';
+import 'olympiade_edition.dart';
 
 /// Regeln einer Disziplin als Karte (App, Startdialog und Zuschauer-Seite)
 class OlympiadeRuleCard extends StatelessWidget {
+  final OlympiadeEdition edition;
   final OlympiadeRuleSection section;
   final double scale;
   final bool showTitle;
 
   const OlympiadeRuleCard({
     super.key,
+    required this.edition,
     required this.section,
     this.scale = 1.0,
     this.showTitle = true,
@@ -18,7 +20,7 @@ class OlympiadeRuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final info = olympiadeDiscipline(section.discipline);
+    final info = edition.discipline(section.discipline);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -103,7 +105,7 @@ class OlympiadeRulesList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: edition.rules
-          .map((section) => OlympiadeRuleCard(section: section, scale: scale))
+          .map((section) => OlympiadeRuleCard(edition: edition, section: section, scale: scale))
           .toList(),
     );
   }
@@ -162,7 +164,7 @@ class OlympiadeScheduleList extends StatelessWidget {
 
   Widget _buildEntry(OlympiadeScheduleEntry entry) {
     final discipline = entry.discipline;
-    final info = discipline != null ? olympiadeDiscipline(discipline) : null;
+    final info = discipline != null ? edition.discipline(discipline) : null;
     final color = info?.color ?? Colors.grey;
 
     // Status der Disziplin in dieser Olympiade
