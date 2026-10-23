@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'doppelkopf/doppelkopf_setup_screen.dart';
 import 'mariokart/mariokart_setup_screen.dart';
+import 'olympiade/olympiade_editions_screen.dart';
 import 'auth_service.dart';
 import 'friends_screen.dart';
 
@@ -55,7 +56,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -67,6 +68,60 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             
+            // Hervorgehobene Kachel für die WG Olympiade (Boule, Dart, Codenames usw. gibt es aktuell nur dort)
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.amber.withValues(alpha: 0.35),
+                      const Color(0xFF1E1E1E),
+                    ],
+                  ),
+                  border: Border.all(color: Colors.amberAccent, width: 1.5),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const OlympiadeEditionsScreen()),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.emoji_events, size: 44, color: Colors.amberAccent),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'WG Olympiade',
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                              Text(
+                                'WG gegen WG • alle Disziplinen',
+                                style: TextStyle(fontSize: 13, color: Colors.white70),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: Colors.amberAccent),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             // 1. Kachel für Doppelkopf
             Card(
               clipBehavior: Clip.antiAlias,

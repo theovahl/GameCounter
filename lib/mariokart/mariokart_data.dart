@@ -13,6 +13,9 @@ class MarioKartCup {
 }
 
 class MarioKartData {
+  /// Cup-ID für eine eigene Auswahl einzelner Strecken (statt eines festen Cups)
+  static const String customCupId = 'einzelstrecken';
+
   /// Offizielle Punkteverteilung nach Platzierung in Mario Kart 8 Deluxe
   static const Map<int, int> placementPoints = {
     1: 15,

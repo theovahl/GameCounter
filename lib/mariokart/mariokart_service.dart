@@ -8,8 +8,14 @@ class MarioKartService {
   CollectionReference<Map<String, dynamic>> get _groupsRef =>
       _firestore.collection('mariokart_groups');
 
+  // Optional eigene Collection für die Spiele (z.B. die einer WG Olympiade),
+  // sonst die normale Collection des Modus
+  final CollectionReference<Map<String, dynamic>>? _customGamesRef;
+
+  MarioKartService({CollectionReference<Map<String, dynamic>>? gamesRef}) : _customGamesRef = gamesRef;
+
   CollectionReference<Map<String, dynamic>> get _gamesRef =>
-      _firestore.collection('mariokart_games');
+      _customGamesRef ?? _firestore.collection('mariokart_games');
 
   // --- GRUPPEN ---
 
@@ -136,6 +142,38 @@ class MarioKartService {
       'cupId': nextCup.id,
       'cupName': nextCup.name,
       'cupTracks': nextCup.tracks,
+    });
+  }
+
+  /// Fügt eine einzelne Strecke hinzu. Ist der aktuelle Abschnitt bereits eine eigene
+  /// Streckenauswahl, wird die Strecke dort angehängt, sonst entsteht ein neuer Abschnitt.
+  Future<void> addSingleTrack({
+    required String gameId,
+    required String track,
+    required List<MarioKartCupInfo> currentCups,
+  }) async {
+    final updatedCups = List<MarioKartCupInfo>.from(currentCups);
+    if (updatedCups.isNotEmpty && updatedCups.last.cupId == MarioKartData.customCupId) {
+      final last = updatedCups.removeLast();
+      updatedCups.add(MarioKartCupInfo(
+        cupId: last.cupId,
+        cupName: last.cupName,
+        tracks: [...last.tracks, track],
+      ));
+    } else {
+      updatedCups.add(MarioKartCupInfo(
+        cupId: MarioKartData.customCupId,
+        cupName: 'Einzelne Strecken',
+        tracks: [track],
+      ));
+    }
+
+    final active = updatedCups.last;
+    await _gamesRef.doc(gameId).update({
+      'cups': updatedCups.map((c) => c.toMap()).toList(),
+      'cupId': active.cupId,
+      'cupName': active.cupName,
+      'cupTracks': active.tracks,
     });
   }
 

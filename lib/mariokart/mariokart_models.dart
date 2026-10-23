@@ -204,9 +204,17 @@ class MarioKartGame {
     return races.where((r) => r.cupIndex == cIndex).toList();
   }
 
-  /// Prüft, ob ein Cup mit allen 4 Strecken absolviert wurde
+  /// Anzahl der Strecken eines Cups (4 bei normalen Cups, bei eigener Streckenauswahl beliebig)
+  int trackCountForCup(int cIndex) {
+    if (cIndex < cups.length && cups[cIndex].tracks.isNotEmpty) {
+      return cups[cIndex].tracks.length;
+    }
+    return 4;
+  }
+
+  /// Prüft, ob ein Cup mit allen Strecken absolviert wurde
   bool isCupFinished(int cIndex) {
-    return racesForCup(cIndex).length >= 4;
+    return racesForCup(cIndex).length >= trackCountForCup(cIndex);
   }
 
   /// Prüft, ob der aktuell aktive Cup abgeschlossen ist

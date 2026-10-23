@@ -3,6 +3,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Hinweis: Nur die WG Olympiade und ihre eigenen Spiele erlauben "get" ohne Login,
+    // damit die Zuschauer-Seite (lib/main_live.dart) sie per Link lesen kann.
+    // Listen/Abfragen und Schreiben bleiben angemeldeten Nutzern vorbehalten,
+    // die zufälligen Dokument-IDs sind daher nur mit dem Link auffindbar.
+    // Die normalen Spielmodi sind nur für angemeldete Nutzer lesbar.
+
     // Benutzerprofile und Freundeslisten
     match /users/{userId} {
       allow read, write: if request.auth != null;
@@ -26,6 +32,58 @@ service cloud.firestore {
     // Mario Kart Spiele (inklusive Grand Prix Rennen, Platzierungen & Punkte)
     match /mariokart_games/{gameId} {
       allow read, write: if request.auth != null;
+    }
+
+    // Boule-Spiele (Teams, Modus & alle Aufnahmen)
+    match /boule_games/{gameId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Dart-Matches (Spieler, Legs zum Sieg & gewonnene Legs)
+    match /darts_games/{gameId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Codenames-Matches (Team Rot & Blau, Siege zum Gesamtsieg)
+    match /codenames_games/{gameId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Halbe-Halbe-Matches (Lebensmittel halbieren, 1 Punkt pro Lebensmittel)
+    match /halbieren_games/{gameId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Bierpong-Spiele (1 gegen 1, nur Gewinner)
+    match /bierpong_games/{gameId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Basketball-Spiele (2 Teams, Best of & gewonnene Partien)
+    match /basketball_games/{gameId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // GeoGuessr-Spiele (2 Teams, Best of & gewonnene Partien)
+    match /geoguessr_games/{gameId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Rubik's-Cube-Spiele (2 Teams, Best of & gewonnene Partien)
+    match /rubiks_games/{gameId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // WG Olympiaden (2 WGs, Disziplinen & Verknüpfung zu den einzelnen Spielen)
+    match /olympiade_games/{olympiadeId} {
+      allow get: if true; // Zuschauer-Seite: einzelnes Dokument per Link
+      allow list, write: if request.auth != null;
+
+      // Spiele der Olympiade, getrennt von den normalen Modi (z.B. boule_games, darts_games)
+      match /{gamesCollection}/{gameId} {
+        allow get: if true; // Zuschauer-Seite: Live-Stand der Disziplinen
+        allow list, write: if request.auth != null;
+      }
     }
   }
 }

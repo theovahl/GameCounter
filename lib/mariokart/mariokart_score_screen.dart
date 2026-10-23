@@ -6,15 +6,16 @@ import 'mariokart_group_stats_screen.dart';
 
 class MarioKartScoreScreen extends StatefulWidget {
   final MarioKartGame game;
+  final MarioKartService? service; // Optional, z.B. für Spiele einer WG Olympiade
 
-  const MarioKartScoreScreen({super.key, required this.game});
+  const MarioKartScoreScreen({super.key, required this.game, this.service});
 
   @override
   State<MarioKartScoreScreen> createState() => _MarioKartScoreScreenState();
 }
 
 class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
-  final MarioKartService _service = MarioKartService();
+  late final MarioKartService _service = widget.service ?? MarioKartService();
 
   void _showRaceDialog(MarioKartGame currentGame, int cupIndex, int trackIndex) {
     if (currentGame.status == 'finished') return;
@@ -72,7 +73,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Rennen ${trackIndex + 1} von 4: $trackName',
+                      'Rennen ${trackIndex + 1} von ${currentGame.trackCountForCup(cupIndex)}: $trackName',
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
@@ -317,6 +318,103 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                       const SizedBox(height: 8),
                       ...boosterCups.map((cup) => _buildAddCupTile(currentGame, cup)),
                     ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddTrackModal(MarioKartGame currentGame) {
+    if (currentGame.status == 'finished') return;
+
+    // Bereits gefahrene Strecken markieren
+    final playedTracks = {
+      for (final cup in currentGame.cups) ...cup.tracks,
+    };
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Nächste Strecke wählen',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16.0),
+                    children: MarioKartData.allCups.map((cup) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cup.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: cup.category == 'Hauptspiel'
+                                    ? Colors.redAccent
+                                    : Colors.amberAccent,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: cup.tracks.map((track) {
+                                final played = playedTracks.contains(track);
+                                return ActionChip(
+                                  avatar: played
+                                      ? const Icon(Icons.check, size: 16, color: Colors.grey)
+                                      : null,
+                                  label: Text(
+                                    track,
+                                    style: TextStyle(color: played ? Colors.grey : Colors.white),
+                                  ),
+                                  onPressed: () async {
+                                    Navigator.pop(sheetContext);
+                                    if (currentGame.id != null) {
+                                      await _service.addSingleTrack(
+                                        gameId: currentGame.id!,
+                                        track: track,
+                                        currentCups: currentGame.cups,
+                                      );
+                                    }
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
@@ -735,7 +833,9 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              // Spiele mit eigener Collection (WG Olympiade) gehören zu keiner Gruppe
+              if (widget.service == null)
+                const PopupMenuItem(
                 value: 'stats',
                 child: Row(
                   children: [
@@ -896,12 +996,14 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                     child: Column(
                       children: [
                         Text(
-                          '🏆 ${currentGame.activeCup.cupName} abgeschlossen!',
+                          currentGame.cupId == MarioKartData.customCupId
+                              ? '🏁 Alle Strecken gefahren!'
+                              : '🏆 ${currentGame.activeCup.cupName} abgeschlossen!',
                           style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'Möchtet ihr einen weiteren Cup spielen oder das Match jetzt beenden?',
+                          'Weiter mit einer einzelnen Strecke, einem ganzen Cup – oder das Match jetzt beenden?',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 13, color: Colors.white70),
                         ),
@@ -914,26 +1016,42 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                                   backgroundColor: Colors.redAccent.shade700,
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                onPressed: () => _showAddCupModal(currentGame),
-                                icon: const Icon(Icons.add, color: Colors.white),
+                                onPressed: () => _showAddTrackModal(currentGame),
+                                icon: const Icon(Icons.add_road, color: Colors.white),
                                 label: const Text(
-                                  'Nächsten Cup wählen',
+                                  'Einzelne Strecke',
                                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.amberAccent,
-                                side: const BorderSide(color: Colors.amberAccent),
-                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.redAccent,
+                                  side: const BorderSide(color: Colors.redAccent),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                onPressed: () => _showAddCupModal(currentGame),
+                                icon: const Icon(Icons.emoji_events, size: 18),
+                                label: const Text('Ganzer Cup'),
                               ),
-                              onPressed: () => _confirmFinishGame(currentGame),
-                              icon: const Icon(Icons.check, size: 18),
-                              label: const Text('Match beenden'),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.amberAccent,
+                              side: const BorderSide(color: Colors.amberAccent),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            onPressed: () => _confirmFinishGame(currentGame),
+                            icon: const Icon(Icons.check, size: 18),
+                            label: const Text('Match beenden'),
+                          ),
                         ),
                       ],
                     ),
@@ -1008,7 +1126,7 @@ class _MarioKartScoreScreenState extends State<MarioKartScoreScreen> {
                                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                       ),
                                       Text(
-                                        '${cupRaces.length} von 4 Strecken absolviert',
+                                        '${cupRaces.length} von ${currentGame.trackCountForCup(cupIndex)} Strecken absolviert',
                                         style: const TextStyle(fontSize: 12, color: Colors.grey),
                                       ),
                                     ],
